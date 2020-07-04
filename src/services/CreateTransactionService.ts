@@ -1,6 +1,6 @@
 import { getCustomRepository, getRepository } from 'typeorm';
 
-// import AppError from '../errors/AppError';
+import AppError from '../errors/AppError';
 import Transaction from '../models/Transaction';
 import Category from '../models/Category';
 import TransactionRepository from '../repositories/TransactionsRepository';
@@ -21,6 +21,12 @@ class CreateTransactionService {
   }: RequestDTO): Promise<Transaction> {
     const transactionRepository = getCustomRepository(TransactionRepository);
     const categoryRepository = getRepository(Category);
+
+    const { total } = await transactionRepository.getBalance();
+
+    if (type === 'outcome' && value > total) {
+      throw new AppError('Insuficient founds!', 400);
+    }
 
     let categoryExists = await categoryRepository.findOne({
       where: { title: category },
